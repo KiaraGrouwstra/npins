@@ -107,12 +107,15 @@ let
           "${if matched == null then "source" else builtins.head matched}${appendShort}";
         name = urlToName url revision;
       in
-      builtins.fetchGit {
-        rev = revision;
-        inherit name;
-        # hash = hash;
-        inherit url submodules;
-      };
+      builtins.fetchGit (
+        {
+          rev = revision;
+          inherit name;
+          # hash = hash;
+          inherit url submodules;
+        }
+        // (if builtins.isNull branch then { } else { ref = branch; })
+      );
 
   mkPyPiSource =
     { url, hash, ... }:
