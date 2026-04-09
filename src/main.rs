@@ -1,7 +1,8 @@
 //! The main CLI application
 
 use anyhow::{Context, Result};
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
+use clap_complete::Shell;
 use crossterm::{
     QueueableCommand,
     cursor::MoveToPreviousLine,
@@ -515,6 +516,12 @@ pub struct GetPathOpts {
     pub name: String,
 }
 
+#[derive(Debug, Parser)]
+pub struct CompletionsOpts {
+    /// The shell to generate completions for
+    pub shell: Shell,
+}
+
 #[derive(Debug, Subcommand)]
 pub enum Command {
     /// Intializes the npins directory. Running this multiple times will restore/upgrade the
@@ -555,6 +562,9 @@ pub enum Command {
 
     /// Evaluates the store path to a pin, fetching it if necessary. Don't forget to add a GC root
     GetPath(GetPathOpts),
+
+    /// Generate shell completions for the given shell
+    Completions(CompletionsOpts),
 }
 
 #[derive(Debug, Parser)]
@@ -1262,6 +1272,14 @@ impl Opts {
             Command::Freeze(o) => self.freeze(o).await?,
             Command::Unfreeze(o) => self.unfreeze(o).await?,
             Command::GetPath(o) => self.get_path(o).await?,
+            Command::Completions(o) => {
+                clap_complete::generate(
+                    o.shell,
+                    &mut Opts::command(),
+                    "npins",
+                    &mut std::io::stdout(),
+                );
+            },
         };
 
         Ok(())
