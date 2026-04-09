@@ -4,6 +4,7 @@
   rustPlatform,
   nix-gitignore,
   makeWrapper,
+  installShellFiles,
   runCommand,
   stdenv,
   darwin,
@@ -62,10 +63,17 @@ let
 
     inherit src;
 
-    nativeBuildInputs = [ makeWrapper ];
+    nativeBuildInputs = [ makeWrapper installShellFiles ];
 
     # (Almost) all tests require internet
     doCheck = false;
+
+    postInstall = ''
+      installShellCompletion --cmd npins \
+        --bash <($out/bin/npins completions bash) \
+        --zsh <($out/bin/npins completions zsh) \
+        --fish <($out/bin/npins completions fish)
+    '';
 
     postFixup = ''
       wrapProgram $out/bin/npins --prefix PATH : "${runtimePath}"
